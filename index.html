@@ -53,8 +53,8 @@
 
         .input-container {
             margin-top: 15px;
-            width: 50%;
-            max-width: 500px;
+            width: 100%;
+            max-width: 715px;
             padding: 10px;
             background-color: #fff;
             border-radius: 15px;
@@ -81,6 +81,10 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             line-height: 1.6;
             font-size: 16px;
+        }
+
+        .documentation li {
+            font-style: italic;
         }
 
         .modal {
@@ -127,6 +131,24 @@
         .modal-content button:hover {
             background-color: #0066cc;
         }
+        .json-box {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        color: #333;
+        max-height: 200px;
+        overflow-y: auto;
+        }
+
+        /* Natija bo'sh holatda bo'lsa, bo'sh ko'rinmasin */
+        #result-box:empty {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -137,29 +159,71 @@
     
     <div class="documentation">
         <h2>Documentation</h2>
-        <p>Welcome to the developer documentation. This section provides all the necessary information and guidelines to get started with our platform. Follow the steps below to explore features:</p>
+        <h1>Hash-Api nima ?</h1>
         <ol>
-            <li>Understand the API structure and usage.</li>
-            <li>Check the authentication process.</li>
-            <li>Integrate the provided endpoints with your application.</li>
+            <li>Har bir foydalanuvchining ma`lumotlari hashlangan bo'lishi lozim shuning uchun ham har xil hash qilish vositalari keng tarqalgan Ushbu Hash-Api sizga kiritgan kalit so'zingizga hash holida qaytarib beradi. Hash orqali asl kalit so'zini olishning imkoni yo'q.</li><br>
+            <li>Apidan foydalanish uchun siz ushbu urlga key parametrida kalit so'zini yuborasiz va natijada javobni JSON formatida olasiz. Uni o'zingiz xoxlaganingizcha dasturingizga qo'llashingiz mumkin. </li><br>
+            <li>Test sifatida ushbu maydonga keyni kiritib javob namunasini ko'rishingiz mumkin. </li>
         </ol>
     </div>
     
     <div class="input-container">
-        <input type="text" placeholder="HASH las uchun keyni kiriting">
+        <input id="key" type="text" placeholder="HASH las uchun keyni kiriting" oninput="getJson()" value="Hello World">
+    </div>
+
+    <div id="result-box" class="json-box">
+        <!-- JSON natija shu yerda ko'rinadi -->
+        { "success": true, "result": { "entered_key": "Hello World", "hash": "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e" } }
     </div>
 
     <div class="modal" id="contactModal">
         <div class="modal-content">
-            <input type="text" placeholder="Email yoki telefon raqam">
-            <input type="text" placeholder="Xabar matni">
-            <button onclick="closeModal()">Send</button>
+            <input id="user" type="text" placeholder="Email yoki telefon raqam">
+            <input id="comment" type="text" placeholder="Xabar matni">
+            <button onclick="closeModal(), toAdmin()">Send</button>
         </div>
     </div>
 
     <script>
         function openModal() {
             document.getElementById('contactModal').style.display = 'flex';
+        }
+
+        async function getJson(){
+            const elementKey = document.getElementById('key');
+            const key = elementKey.value;
+            try {
+                const response = await fetch(`http://localhost:3000/api/index.php?key=${key}`);
+                const result = await response.json();
+                const resultBox = document.getElementById('result-box');
+                if(result){
+                    text = JSON.stringify(result, null, 4);
+                    resultBox.innerHTML = text;
+                }else{
+                    result.innerHTML = "Muammo mavjud";
+                }
+            }catch(e){
+                console.error(e);
+            }
+        }
+
+        function toAdmin(){
+            const user = document.getElementById('user').value;
+            const comment = document.getElementById('comment').value;
+            if(!user || !comment){
+                console.log("To'liq kiritilmagan");
+            }else{
+                const token = "7631281045:AAEIjHkKoFbEy1FfeJbUdXGW5vPmFn5WeHY";
+                const text= `Email yoki manzili: ${user}
+
+                
+                Xabari: ${comment}`;
+                fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=1141751258&text=${text}`).then(
+                    console.log("Worked")
+                ).catch(
+                    console.error("Error")
+                )
+            }
         }
 
         function closeModal() {
